@@ -29,7 +29,7 @@ Providing a monthly summary of all active resources transactions
    Frequency: Monthly
    Day: 5th of the month
    Time: 07:00 UTC (15:00 PHT)
-   Trigger: AWS EventBridge rule → Lambda execution → S3 upload & SNS notification
+ Trigger: AWS EventBridge rule → Lambda execution → S3 upload & SNS notification
 
 ## 5. Repository Structure
 <img width="742" height="230" alt="image" src="https://github.com/user-attachments/assets/d82321f0-6e06-45cf-87a3-ce1348e8ed72" />
