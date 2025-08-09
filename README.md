@@ -26,9 +26,9 @@ Providing a monthly summary of all active resources transactions
 <img width="667" height="118" alt="image" src="https://github.com/user-attachments/assets/2100825f-1f88-4c60-9231-0ec6cd3d1633" />
 
 ## 4. Schedule of Report
-   Frequency: Monthly
-   Day: 5th of the month
-   Time: 07:00 UTC (15:00 PHT)
+   Frequency: Monthly \
+   Day: 5th of the month \ 
+   Time: 07:00 UTC (15:00 PHT) \
  Trigger: AWS EventBridge rule → Lambda execution → S3 upload & SNS notification
 
 ## 5. Repository Structure
@@ -37,23 +37,22 @@ Providing a monthly summary of all active resources transactions
 
 ## 6. Deployment Steps
 
-Step 1 – Upload Lambda to AWS
-zip lambda.zip resources-invoice-summary.py
+Step 1 – Upload Lambda.zip to AWS and named as resources-invoice-summary \
 aws lambda create-function \
-  --function-name AWSResourcesInvoiceSummary \
+  --function-name resources-invoice-summary  \
   --runtime python3.12 \
   --role arn:aws:iam::<ACCOUNT_ID>:role/<LAMBDA_ROLE> \
   --handler resources-invoice-summary.lambda_handler \
   --zip-file fileb://lambda.zip
 
-Step 2 – Create EventBridge Schedule
+Step 2 – Create EventBridge Schedule \
 aws events put-rule \
   --name "resources-monthly-summary-schedule" \
   --schedule-expression "cron(0 7 5 * ? *)"
 
 Step 3 – Add EventBridge Permission to Lambda
 aws lambda add-permission \
-  --function-name AWSResourcesInvoiceSummary \
+  --function-name resources-invoice-summary  \
   --statement-id eventbridge-monthly-trigger \
   --action 'lambda:InvokeFunction' \
   --principal events.amazonaws.com \
