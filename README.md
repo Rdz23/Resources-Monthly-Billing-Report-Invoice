@@ -50,7 +50,7 @@ aws events put-rule \
   --name "resources-monthly-summary-schedule" \
   --schedule-expression "cron(0 7 5 * ? *)"
 
-Step 3 – Add EventBridge Permission to Lambda
+Step 3 – Add EventBridge Permission to Lambda \
 aws lambda add-permission \
   --function-name resources-invoice-summary  \
   --statement-id eventbridge-monthly-trigger \
@@ -58,7 +58,7 @@ aws lambda add-permission \
   --principal events.amazonaws.com \
   --source-arn arn:aws:events:<REGION>:<ACCOUNT_ID>:rule/resources-monthly-summary-schedule
 
-Step 4 – Set Up SNS Topic & Subscription
+Step 4 – Set Up SNS Topic & Subscription \
 aws sns create-topic --name resources-billing-report
 aws sns subscribe \
   --topic-arn arn:aws:sns:<REGION>:<ACCOUNT_ID>:resources-billing-report \
