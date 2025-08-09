@@ -32,17 +32,8 @@ Providing a monthly summary of all active resources transactions
    Trigger: AWS EventBridge rule → Lambda execution → S3 upload & SNS notification
 
 ## 5. Repository Structure
-aws-resources-monthly-billing/
-│
-├── lambda/
-│   └── resources-invoice-summary.py     # Lambda function code
-│
-├── diagrams/
-│   └── architecture.png                 # System architecture diagram
-│
-├── README.md                            # Project documentation
-└── eventbridge/
-    └── schedule.json                    # EventBridge rule configuration
+<img width="942" height="430" alt="image" src="https://github.com/user-attachments/assets/d82321f0-6e06-45cf-87a3-ce1348e8ed72" />
+
 
 ## 6. Deployment Steps
 
