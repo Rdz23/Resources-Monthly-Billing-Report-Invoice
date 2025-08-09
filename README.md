@@ -1,8 +1,6 @@
 # Resources-Monthly-Billing-Report-Invoice
-AWS Resources Monthly Billing Report Invoice
 
-AWS Resources Monthly Billing Summary Report
-1. Description
+## 1. Description
 This automation generates a monthly AWS billing summary by resource (EC2, RDS, FSx), merged with a tag audit file to include meaningful ResourceName values.
 
 It is powered by AWS Cost and Usage Reports (CUR) and outputs both TXT and CSV files to S3.
@@ -14,7 +12,7 @@ Features:
 * Uploads TXT/CSV outputs to S3
 * Sends SNS notification with a pre-signed CSV link
 
-2. Current Problem
+## 2. Current Problem
 When managing multiple EC2, RDS, FSx (e.g., each owned by different departments or clients), it’s often challenging to split billing per resources.
 AWS’s default Billing dashboard lacks the granularity needed for detailed cost breakdowns.
 
@@ -24,16 +22,16 @@ Mapping costs to Invoice IDs
 Enabling chargeback/cross-charge per EC2, RDS and FSx
 Providing a monthly summary of all active resources transactions
 
-3. Diagram
+## 3. Diagram
 <img width="767" height="218" alt="image" src="https://github.com/user-attachments/assets/2100825f-1f88-4c60-9231-0ec6cd3d1633" />
 
-4. Schedule of Report
+## 4. Schedule of Report
    Frequency: Monthly
    Day: 5th of the month
    Time: 07:00 UTC (15:00 PHT)
    Trigger: AWS EventBridge rule → Lambda execution → S3 upload & SNS notification
 
-5. Repository Structure
+## 5. Repository Structure
 aws-resources-monthly-billing/
 │
 ├── lambda/
@@ -46,7 +44,7 @@ aws-resources-monthly-billing/
 └── eventbridge/
     └── schedule.json                    # EventBridge rule configuration
 
-6. Deployment Steps
+## 6. Deployment Steps
 
 Step 1 – Upload Lambda to AWS
 zip lambda.zip resources-invoice-summary.py
@@ -77,7 +75,7 @@ aws sns subscribe \
   --protocol email \
   --notification-endpoint your_email@example.com
 
-7. Example Output
+## 7. Example Output
 AWS Resource Invoice Summary (July-2025)
 
 Invoice ID: 1234567890
