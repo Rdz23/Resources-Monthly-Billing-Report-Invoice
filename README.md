@@ -23,7 +23,7 @@ Enabling chargeback/cross-charge per EC2, RDS and FSx
 Providing a monthly summary of all active resources transactions
 
 ## 3. Diagram
-<img width="767" height="218" alt="image" src="https://github.com/user-attachments/assets/2100825f-1f88-4c60-9231-0ec6cd3d1633" />
+<img width="667" height="118" alt="image" src="https://github.com/user-attachments/assets/2100825f-1f88-4c60-9231-0ec6cd3d1633" />
 
 ## 4. Schedule of Report
    Frequency: Monthly
@@ -32,7 +32,7 @@ Providing a monthly summary of all active resources transactions
    Trigger: AWS EventBridge rule → Lambda execution → S3 upload & SNS notification
 
 ## 5. Repository Structure
-<img width="942" height="430" alt="image" src="https://github.com/user-attachments/assets/d82321f0-6e06-45cf-87a3-ce1348e8ed72" />
+<img width="742" height="230" alt="image" src="https://github.com/user-attachments/assets/d82321f0-6e06-45cf-87a3-ce1348e8ed72" />
 
 
 ## 6. Deployment Steps
