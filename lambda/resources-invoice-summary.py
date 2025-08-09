@@ -1,0 +1,142 @@
+import boto3
+import gzip
+import csv
+import io
+from datetime import datetime, timedelta
+
+s3 = boto3.client('s3')
+sns = boto3.client('sns')
+
+# Config
+CUR_BUCKET = "my-route53-billing-main"
+CUR_KEY = "resources_invoice_summary/resources-report-gz/resources_invoice_summary_june-2025.csv.gz"
+
+TAG_BUCKET = "my-tag-audit"
+TAG_KEY = "tag-audit-output.txt"
+
+OUTPUT_BUCKET = "rts-route53-billing-main"
+SNS_TOPIC_ARN = "arn:aws:sns:ap-southeast-1:<ACCOUNT#>:resources-billing-report"
+REGION = "ap-southeast-1"
+
+def lambda_handler(event, context):
+    today = datetime.utcnow()
+    prev_month = (today.replace(day=1) - timedelta(days=1)).strftime("%B-%Y")
+    outfile_txt = f"aws-resources-billing-report-{prev_month}.txt"
+    csv_file = f"aws-resources-billing-report-{prev_month}.csv"
+
+    # Determine CUR file key
+    global CUR_KEY  # Declare as global to allow reassignment
+    if 'Records' in event and 's3' in event['Records'][0]:
+        CUR_KEY = event['Records'][0]['s3']['object']['key']
+        print(f"Triggered by S3 event. CUR file: s3://{CUR_BUCKET}/{CUR_KEY}")
+    else:
+        print(f"⚙️ Running manually. Using default CUR file: s3://{CUR_BUCKET}/{CUR_KEY}")
+
+
+    # STEP 1: Download and Extract CUR
+    cur_obj = s3.get_object(Bucket=CUR_BUCKET, Key=CUR_KEY)
+    with gzip.GzipFile(fileobj=cur_obj['Body']) as gz:
+        content = gz.read().decode('utf-8').splitlines()
+
+    reader = csv.reader(content)
+    headers = next(reader)
+    data = list(reader)
+
+    invoice_id = next((row[headers.index("bill/InvoiceId")] for row in data if row[headers.index("bill/InvoiceId")]), "N/A")
+
+    # STEP 2: Load Tag Audit File into Dictionary
+    tag_obj = s3.get_object(Bucket=TAG_BUCKET, Key=TAG_KEY)
+    tag_lines = tag_obj['Body'].read().decode('utf-8').splitlines()
+
+    tag_map = {}
+    for line in tag_lines:
+        if '|' in line and not line.startswith('─'):
+            parts = line.strip().split('|')
+            if len(parts) >= 3:
+                resource_id = parts[2].strip()
+                resource_name = parts[1].strip()
+                if resource_id and resource_name:
+                    tag_map[resource_id] = resource_name
+
+    # STEP 3: Parse CUR rows and summarize cost by ResourceId
+    summary = {}
+    resource_types = {}  # Keep track of type: ec2, rds, fsx
+
+    for row in data:
+        try:
+            rid = row[headers.index("lineItem/ResourceId")]
+            cost_str = row[headers.index("lineItem/UnblendedCost")]
+            company = row[headers.index("resourceTags/user:Company")] or "<No Tag>"
+            cost = float(cost_str.replace('$', '') or 0)
+        except:
+            continue
+
+        # Normalize ResourceId and detect type
+        if rid.startswith("i-"):
+            resid = rid
+            rtype = "ec2"
+        elif ":db:" in rid:
+            resid = rid.split(":db:")[-1]
+            rtype = "rds"
+        elif "fsx" in rid and "file-system" in rid:
+            resid = "fs-" + rid.split("fs-")[-1]
+            rtype = "fsx"
+        else:
+            continue
+
+        key = f"{company}###{resid}"
+        summary[key] = summary.get(key, 0) + cost
+        resource_types[key] = rtype
+
+    # STEP 4: Generate TXT and CSV Outputs
+    txt_output = [f"# Invoice ID: {invoice_id}", "", f"{'Company':<25} | {'ResourceId':<30} | {'UnblendedCost ($)':<18} | ResourceName", "-"*100]
+    csv_output = [f"# Invoice ID: {invoice_id}", "", "Company,ResourceId,UnblendedCost (USD$),ResourceName"]
+
+    for k, total in summary.items():
+        company, resid = k.split("###")
+        rtype = resource_types.get(k)
+        res_name = tag_map.get(resid, "")
+
+        # Apply fallback only for RDS
+        if not res_name and rtype == "rds":
+            res_name = resid
+
+        txt_output.append(f"{company:<25} | {resid:<30} | ${total:<17.6f} | {res_name}")
+        csv_output.append(f'"{company}","{resid}","{total:.6f}","{res_name}"')
+
+    # STEP 5: Upload TXT and CSV files to S3
+    s3.put_object(
+        Bucket=OUTPUT_BUCKET,
+        Key=f"resources_invoice_summary/resource-report-txt/{outfile_txt}",
+        Body="\n".join(txt_output)
+    )
+    s3.put_object(
+        Bucket=OUTPUT_BUCKET,
+        Key=f"resources_invoice_summary/resources-report-csv/{csv_file}",
+        Body="\n".join(csv_output)
+    )
+
+    # STEP 6: Generate Pre-signed URL
+    url = s3.generate_presigned_url(
+        'get_object',
+        Params={'Bucket': OUTPUT_BUCKET, 'Key': f"resources_invoice_summary/resources-report-csv/{csv_file}"},
+        ExpiresIn=259200
+    )
+
+    # STEP 7: Send SNS Notification
+    sns_message = f"""AWS Resource Invoice Summary ({prev_month})
+
+Invoice ID: {invoice_id}
+
+CSV Report: {csv_file}
+
+This link will expire in 3 days.
+
+Download Pre-Signed URL: {url}
+"""
+
+    sns.publish(
+        TopicArn=SNS_TOPIC_ARN,
+        Subject=f"AWS Monthly Invoice Report - {prev_month}",
+        Message=sns_message
+    )
