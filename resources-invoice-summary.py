@@ -15,8 +15,8 @@ TAG_BUCKET = "rcn-tag-audit"
 TAG_KEY = "tag-audit-output.txt"
 
 OUTPUT_BUCKET = "rts-route53-billing-main"
-SNS_TOPIC_ARN = "arn:aws:sns:ap-southeast-1:665634427675:resources-billing-report"
-#SNS_TOPIC_ARN = "arn:aws:sns:ap-southeast-1:665634427675:TagAuditAlerts"
+SNS_TOPIC_ARN = "arn:aws:sns:ap-southeast-1:<ACCOUNT#>:resources-billing-report"
+#SNS_TOPIC_ARN = "arn:aws:sns:ap-southeast-1:<ACCOUNT#>:TagAuditAlerts"
 REGION = "ap-southeast-1"
 
 def lambda_handler(event, context):
@@ -140,4 +140,5 @@ Download Pre-Signed URL: {url}
         TopicArn=SNS_TOPIC_ARN,
         Subject=f"AWS Monthly Invoice Report - {prev_month}",
         Message=sns_message
+
     )
