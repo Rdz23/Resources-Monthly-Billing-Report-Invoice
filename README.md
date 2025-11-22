@@ -37,7 +37,7 @@ Providing a monthly summary of all active resources transactions
 
 ## 6. Deployment Steps
 
-Step 1 – Upload Lambda.zip to AWS and named as resources-invoice-summary \
+**Step 1** – Upload Lambda.zip to AWS and named as resources-invoice-summary \
 aws lambda create-function \
   --function-name resources-invoice-summary  \
   --runtime python3.12 \
@@ -45,12 +45,12 @@ aws lambda create-function \
   --handler resources-invoice-summary.lambda_handler \
   --zip-file fileb://lambda.zip
 
-Step 2 – Create EventBridge Schedule \
+**Step 2** – Create EventBridge Schedule \
 aws events put-rule \
   --name "resources-monthly-summary-schedule" \
   --schedule-expression "cron(0 7 5 * ? *)"
 
-Step 3 – Add EventBridge Permission to Lambda \
+**Step 3** – Add EventBridge Permission to Lambda \
 aws lambda add-permission \
   --function-name resources-invoice-summary  \
   --statement-id eventbridge-monthly-trigger \
@@ -58,7 +58,7 @@ aws lambda add-permission \
   --principal events.amazonaws.com \
   --source-arn arn:aws:events:<REGION>:<ACCOUNT_ID>:rule/resources-monthly-summary-schedule
 
-Step 4 – Set Up SNS Topic & Subscription \
+**Step 4** – Set Up SNS Topic & Subscription \
 aws sns create-topic --name resources-billing-report
 aws sns subscribe \
   --topic-arn arn:aws:sns:<REGION>:<ACCOUNT_ID>:resources-billing-report \
